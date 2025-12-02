@@ -9,7 +9,7 @@ import UIKit
 
 final class SmallTableCell: UITableViewCell {
     static let identifier = "SmallTableCell"
-    var items: [Int] = [0, 1, 2]
+    var items: [Int] = [0]
     var currentItemSize: CGSize = .init(width: 124, height: 60)
     
     @IBOutlet weak var collectionView: DynamicHeightCollectionView!
@@ -40,18 +40,36 @@ final class SmallTableCell: UITableViewCell {
     }
     
     func setupUI() {
-        collectionView.reloadData()
+        collectionView.performBatchUpdates({})
     }
     
     private func fetchAddItems() {
         Task {
             try await Task.sleep(nanoseconds: 400_000_000)
-            self.items.append(contentsOf: (0..<10).map { $0 + self.items.count })
             await MainActor.run {
-                self.collectionView.reloadData()
-                NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
+                performInsert()
             }
         }
+    }
+    
+    private func performInsert() {
+        let startIndex = self.items.count
+        self.collectionView.performBatchUpdates({
+            let newItems = (0..<3).map { $0 + self.items.count }
+            self.items.insert(contentsOf: newItems, at: startIndex)
+            let indexPaths = (0..<newItems.count).map {
+                IndexPath(item: startIndex + $0, section: 0)
+            }
+            self.collectionView.insertItems(at: indexPaths)
+        })
+        NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
+    }
+    
+    private func reloadInserting() {
+        let startIndex = self.items.count
+        let newItems = (0..<12).map { $0 + self.items.count }
+        items.insert(contentsOf: newItems, at: startIndex)
+        collectionView.reloadData()
     }
     
     @objc func resize(_ notification: Notification) {
@@ -68,8 +86,14 @@ final class SmallTableCell: UITableViewCell {
     }
     
     @objc func removeItem(_ notification: Notification) {
-        items.removeLast()
-        collectionView.reloadData()
+        guard !items.isEmpty else { return }
+        let removeIndex = items.count - 1
+        collectionView.performBatchUpdates({
+            items.remove(at: removeIndex)
+            collectionView.deleteItems(at: [
+                .init(item: removeIndex, section: 0)
+            ])
+        })
     }
 }
 
@@ -87,9 +111,5 @@ extension SmallTableCell: UICollectionViewDataSource, UICollectionViewDelegate {
         }
         cell.setData("\(items[indexPath.row])")
         return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        print("cell.frame = \(cell.frame)")
     }
 }

@@ -32,6 +32,12 @@ final class DynamicHeightCollectionView: UICollectionView {
 
     override var intrinsicContentSize: CGSize {
         // return collectionViewLayout.collectionViewContentSize
+        guard !visibleCells.isEmpty else {
+            return .init(
+                width: collectionViewLayout.collectionViewContentSize.width,
+                height: 0
+            )
+        }
         let heights = visibleCells.map { $0.frame.size.height }
         maxHeight = heights.max() ?? 0
         return .init(

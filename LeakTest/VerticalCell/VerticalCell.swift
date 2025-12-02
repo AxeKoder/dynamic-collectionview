@@ -25,8 +25,16 @@ class VerticalCell: UICollectionViewCell {
         stackViewWidth.constant = UIScreen.main.bounds.width
         stackView.arrangedSubviews.enumerated().forEach { i, item in
             if i > 0 {
-                item.isHidden = i < index
+                item.isHidden = i > index
             }
         }
+        
+    }
+    
+    func addCreatedView() -> UIView {
+        let view = UIView()
+        view.backgroundColor = .systemPink
+        stackView.addArrangedSubview(view)
+        return view
     }
 }

@@ -7,13 +7,10 @@
 
 import UIKit
 
-
-
-
 class BViewController: UIViewController {
     var closure: (() -> Void)?
     
-    var cellItems: [String] = (0..<10).map(String.init)
+    var cellItems: [String] = (0..<20).map(String.init)
     
     @IBOutlet weak var tableView: UITableView!
     
@@ -62,8 +59,8 @@ class BViewController: UIViewController {
         tableView.performBatchUpdates({})
     }
     
-    @IBAction func resize(_ sender: Any) {
-        NotificationCenter.default.post(name: NSNotification.Name("Resize"), object: nil, userInfo: nil)
+    @IBAction func reloadData(_ sender: Any) {
+        NotificationCenter.default.post(name: NSNotification.Name("ReloadData"), object: nil, userInfo: nil)
     }
     
     @objc func performBatchUpdate(_ sender: Any) {
@@ -79,22 +76,16 @@ extension BViewController: UITableViewDataSource, UITableViewDelegate {
             }
             cell.setupUI()
             return cell
-        } else if indexPath.row == 1 {
+        } else {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: LargeTableCell.identifier, for: indexPath) as? LargeTableCell else {
                 return .init()
             }
             return cell
         }
-        
-        return .init()
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        2
-    }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableView.automaticDimension
+        cellItems.count
     }
 }
 

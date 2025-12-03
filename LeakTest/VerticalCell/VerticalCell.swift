@@ -10,25 +10,17 @@ import UIKit
 class VerticalCell: UICollectionViewCell {
     static let identifier: String = "VerticalCell"
     @IBOutlet weak var stackView: UIStackView!
-    @IBOutlet weak var stackViewWidth: NSLayoutConstraint!
-    
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        
-    }
     
     override func prepareForReuse() {
         super.prepareForReuse()
     }
     
     func setupUI(index: Int) {
-        stackViewWidth.constant = UIScreen.main.bounds.width
-        stackView.arrangedSubviews.enumerated().forEach { i, item in
-            if i > 0 {
-                item.isHidden = i > index
+        (0..<index).forEach {
+            if $0 < stackView.arrangedSubviews.count {
+                stackView.arrangedSubviews[$0].isHidden = false
             }
         }
-        
     }
     
     func addCreatedView() -> UIView {

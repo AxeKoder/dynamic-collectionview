@@ -10,17 +10,24 @@ import UIKit
 class BViewController: UIViewController {
     var closure: (() -> Void)?
     
-    var cellItems: [String] = (0..<20).map(String.init)
+    var cellItems: [String] = (0..<2).map(String.init)
     
     @IBOutlet weak var tableView: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        asyncWeakSelf()
+//        asyncWeakSelf()
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.performBatchUpdates(nil)
+        tableView.rowHeight = UITableView.automaticDimension
         
+//        tableView.performBatchUpdates({
+//            tableView.reloadRows(at: [
+//                IndexPath(item: 0, section: 0),
+//                IndexPath(item: 1, section: 0)
+//            ], with: .automatic)
+//        })
+//        
         NotificationCenter.default.addObserver(self, selector: #selector(performBatchUpdate(_:)), name: NSNotification.Name("PerformBatchUpdate"), object: nil)
     }
     
@@ -56,15 +63,14 @@ class BViewController: UIViewController {
     
     @IBAction func actionMinus(_ sender: Any) {
         NotificationCenter.default.post(name: NSNotification.Name("RemoveItem"), object: nil, userInfo: nil)
-        tableView.performBatchUpdates({})
     }
     
     @IBAction func reloadData(_ sender: Any) {
-        NotificationCenter.default.post(name: NSNotification.Name("ReloadData"), object: nil, userInfo: nil)
+        tableView.reloadData()
     }
     
     @objc func performBatchUpdate(_ sender: Any) {
-        tableView.performBatchUpdates({})
+        self.tableView.reloadData()
     }
 }
 
@@ -80,6 +86,7 @@ extension BViewController: UITableViewDataSource, UITableViewDelegate {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: LargeTableCell.identifier, for: indexPath) as? LargeTableCell else {
                 return .init()
             }
+            cell.setData(indexPath.row)
             return cell
         }
     }

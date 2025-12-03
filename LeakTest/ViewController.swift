@@ -35,7 +35,7 @@ final class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-        
+        performSegue(withIdentifier: "pushB", sender: nil)
     }
 
     @IBAction func triggerMemoryWarning(_ sender: Any) {

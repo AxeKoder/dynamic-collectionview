@@ -10,7 +10,7 @@ import UIKit
 class BViewController: UIViewController {
     var closure: (() -> Void)?
     
-    var cellItems: [String] = (0..<20).map(String.init)
+    var cellItems: [String] = (0..<2).map(String.init)
     
     @IBOutlet weak var tableView: UITableView!
     
@@ -60,7 +60,7 @@ class BViewController: UIViewController {
     }
     
     @IBAction func reloadData(_ sender: Any) {
-        NotificationCenter.default.post(name: NSNotification.Name("ReloadData"), object: nil, userInfo: nil)
+        tableView.reloadData()
     }
     
     @objc func performBatchUpdate(_ sender: Any) {

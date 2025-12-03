@@ -10,9 +10,12 @@ import UIKit
 final class LargeTableCell: UITableViewCell {
     
     var items: [Int] = [0]
+    var isMoreVisible: Bool = false
     
     static let identifier = "LargeTableCell"
-    @IBOutlet weak var collectionView: ResizingHeightCollectionView!
+    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var stackView: UIStackView!
+    @IBOutlet weak var buttonMore: UIButton!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -29,12 +32,20 @@ final class LargeTableCell: UITableViewCell {
 //        NotificationCenter.default.addObserver(self, selector: #selector(fetchAsync(_:)), name: NSNotification.Name("AddItem"), object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(reloadData(_:)), name: NSNotification.Name("ReloadData"), object: nil)
+        
+        // 옵저버 등록
+        NotificationCenter.default.addObserver(self, selector: #selector(addItem(_:)), name: NSNotification.Name("AddItem"), object: nil)
     }
     
-    @objc func fetchAsync(_ notification: Notification) {
+    @objc func addItem(_ notification: Notification) {
+        fetchAsync()
+    }
+    
+    func fetchAsync() {
         Task {
-            try await Task.sleep(nanoseconds: 500_000_000)
+            try await Task.sleep(nanoseconds: 400_000_000)
             await MainActor.run {
+                self.buttonMore.isHidden.toggle()
                 self.collectionView.performBatchUpdates({
                     self.items.append(contentsOf: (0..<1).map { $0 + self.items.count })
                     self.collectionView.insertItems(at: [
@@ -52,6 +63,14 @@ final class LargeTableCell: UITableViewCell {
     
     @objc func reloadData(_ notificaiton: Notification) {
         collectionView.reloadData()
+    }
+    
+    override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
+        collectionView.frame = CGRect(x: 0, y: 0, width: targetSize.width, height: CGFloat(MAXFLOAT))
+        collectionView.layoutIfNeeded()
+        let size = collectionView.collectionViewLayout.collectionViewContentSize
+        let newSize = CGSize(width: size.width, height: size.height + stackView.frame.height)
+        return newSize
     }
 }
 

@@ -18,11 +18,11 @@ enum Item: Hashable {
 
 final class SmallTableCell: UITableViewCell {
     static let identifier = "SmallTableCell"
-    var items: [Int] = [0, 1, 2]
+    var items: [Int] = (0..<6).map { $0 }
     var currentItemSize: CGSize = .init(width: 124, height: 60)
     var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
     
-    @IBOutlet weak var collectionView: ResizingHeightCollectionView!
+    @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var buttonMore: UIButton!
     
     override func awakeFromNib() {
@@ -48,10 +48,8 @@ final class SmallTableCell: UITableViewCell {
     }
     
     func setupUI() {
-        //    collectionView.performBatchUpdates({})
+        collectionView.layoutSubviews()
     }
-    
-    
     
     @objc func resize(_ notification: Notification) {
         currentItemSize = .init(
@@ -79,37 +77,10 @@ final class SmallTableCell: UITableViewCell {
         }
     }
     
-    private func performInsert() {
-        let startIndex = self.items.count
-        self.collectionView.performBatchUpdates({
-            let newItems = (0..<3).map { $0 + self.items.count }
-            self.items.insert(contentsOf: newItems, at: startIndex)
-            let indexPaths = (0..<newItems.count).map {
-                IndexPath(item: startIndex + $0, section: 0)
-            }
-            self.collectionView.insertItems(at: indexPaths)
-        })
-        NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
-    }
-    
-    private func reloadInserting() {
-        let startIndex = self.items.count
-        let newItems = (0..<12).map { $0 + self.items.count }
-        items.insert(contentsOf: newItems, at: startIndex)
-        collectionView.reloadData()
-    }
-    
-    
     func configureCollectionView() {
-        let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
-            let containerWidth = environment.container.contentSize.width
+        let layout = UICollectionViewCompositionalLayout { _, _ in
             let leadingInset: CGFloat = 16
             let spacing: CGFloat = 10
-            
-            // 2.5개 셀 + 2개 간격이 보이도록 계산
-            // 보이는 영역 = containerWidth - leadingInset
-            // 2.5 * cellWidth + 2 * spacing = containerWidth - leadingInset
-            let cellWidth = (containerWidth - leadingInset - (2 * spacing)) / 2.5
             
             // 아이템 높이를 estimated로 설정하여 콘텐츠에 맞게 자동 조절
             let itemSize = NSCollectionLayoutSize(
@@ -140,7 +111,7 @@ final class SmallTableCell: UITableViewCell {
             
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: BCell.identifier, for: indexPath) as? BCell else { return nil }
-            cell.setData("\(indexPath.row)")
+            cell.setData(indexPath.row)
             return cell
         }
     }
@@ -148,13 +119,14 @@ final class SmallTableCell: UITableViewCell {
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections([.main])
-        snapshot.appendItems([
-            .a("Short text"),
-            .b("This is a longer block of text that should demonstrate auto-resizing behavior in BCell."),
-            .a("C")
-        ])
-        dataSource.apply(snapshot, animatingDifferences: false)
-        layoutIfNeeded()
+        snapshot.appendItems(
+            items.map {
+                Item.a("\($0)")
+            }
+        )
+        dataSource.apply(snapshot, animatingDifferences: false) {
+            self.collectionView.layoutSubviews()
+        }
     }
     
     /// 2개의 셀을 동일한 텍스트(사이즈)로 추가하는 메소드
@@ -167,6 +139,7 @@ final class SmallTableCell: UITableViewCell {
             .a("\(text) - \(Int(timestamp * 1000) % 10000 + 1)")
         ])
         dataSource.apply(snapshot, animatingDifferences: true) {
+            self.collectionView.layoutSubviews()
             NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
         }
     }
@@ -178,5 +151,61 @@ final class SmallTableCell: UITableViewCell {
         dataSource.apply(snapshot, animatingDifferences: true) {
             NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
         }
+    }
+    
+    override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
+        let yPos = collectionView.frame.origin.y
+        
+        // 레이아웃 계산
+        collectionView.frame = CGRect(x: 0, y: 0, width: targetSize.width, height: CGFloat(MAXFLOAT))
+        collectionView.layoutIfNeeded()
+        
+        // 현재 레이아웃된 높이
+        let currentLayoutHeight = collectionView.collectionViewLayout.collectionViewContentSize.height
+        
+        // 모든 아이템의 최대 높이 계산
+        var maxCalculatedHeight: CGFloat = currentLayoutHeight
+        
+        // contentInsets 반영 (top: 16, bottom: 16)
+        let verticalInsets: CGFloat = 16 + 16
+        
+        // snapshot에서 아이템 개수 확인
+        if let snapshot = dataSource?.snapshot() {
+            let itemCount = snapshot.numberOfItems(inSection: .main)
+            
+            // 첫 번째 셀의 기본 높이 측정 (index=0일 때)
+            if itemCount > 0, let firstCell = collectionView.cellForItem(at: IndexPath(item: 0, section: 0)) {
+                let firstCellHeight = firstCell.frame.height
+                
+                let baseCellHeight = firstCellHeight
+                
+                // 모든 인덱스에 대해 높이 계산
+                var maxCellHeight: CGFloat = 0
+                for index in 0..<itemCount {
+                    let calculatedHeight = baseCellHeight + CGFloat(index) * 30.0
+                    maxCellHeight = max(maxCellHeight, calculatedHeight)
+                }
+                
+                // 최대 셀 높이 + contentInsets
+                maxCalculatedHeight = max(maxCalculatedHeight, maxCellHeight + verticalInsets)
+            } else {
+                // 첫 번째 셀이 없으면 layoutAttributes로 기본 높이 추정
+                if let layoutAttributes = collectionView.layoutAttributesForItem(at: IndexPath(item: 0, section: 0)) {
+                    let baseCellHeight = layoutAttributes.frame.height
+                    
+                    var maxCellHeight: CGFloat = 0
+                    for index in 0..<itemCount {
+                        let calculatedHeight = baseCellHeight + CGFloat(index) * 30.0
+                        maxCellHeight = max(maxCellHeight, calculatedHeight)
+                    }
+                    
+                    // 최대 셀 높이 + contentInsets
+                    maxCalculatedHeight = max(maxCalculatedHeight, maxCellHeight + verticalInsets)
+                }
+            }
+        }
+        
+        let newSize = CGSize(width: targetSize.width, height: yPos + maxCalculatedHeight + buttonMore.frame.height)
+        return newSize
     }
 }

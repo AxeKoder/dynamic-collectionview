@@ -10,17 +10,10 @@ import UIKit
 class VerticalCell: UICollectionViewCell {
     static let identifier: String = "VerticalCell"
     @IBOutlet weak var stackView: UIStackView!
-    
-    override func prepareForReuse() {
-        super.prepareForReuse()
-    }
+    @IBOutlet weak var bottomViewHeight: NSLayoutConstraint!
     
     func setupUI(index: Int) {
-        (0..<index).forEach {
-            if $0 < stackView.arrangedSubviews.count {
-                stackView.arrangedSubviews[$0].isHidden = false
-            }
-        }
+        bottomViewHeight.constant = CGFloat(index + 1) * 22.0
     }
     
     func addCreatedView() -> UIView {

@@ -9,6 +9,7 @@ import UIKit
 
 final class BCell: UICollectionViewCell {
     static let identifier = "BCell"
+    
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var stackView: UIStackView!

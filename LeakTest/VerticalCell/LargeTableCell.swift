@@ -22,7 +22,7 @@ final class LargeTableCell: UITableViewCell {
     var items: [Int] = [0]
     var dataSource: UICollectionViewDiffableDataSource<VerticalSection, VerticalItem>!
     
-    @IBOutlet weak var collectionView: ResizingHeightCollectionView!
+    @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var buttonMore: UIButton!
   
     override func awakeFromNib() {
@@ -102,7 +102,7 @@ final class LargeTableCell: UITableViewCell {
             
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: VerticalCell.identifier, for: indexPath) as? VerticalCell else { return nil }
-            cell.setupUI(index: self.cellIndex)
+            cell.setupUI(index: indexPath.row)
             return cell
         }
     }

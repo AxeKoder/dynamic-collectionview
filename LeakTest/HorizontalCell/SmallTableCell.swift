@@ -18,12 +18,14 @@ enum Item: Hashable {
 
 final class SmallTableCell: UITableViewCell {
     static let identifier = "SmallTableCell"
-    var items: [Int] = (0..<6).map { $0 }
+    var items: [Int] = (0..<5).map { $0 }
     var currentItemSize: CGSize = .init(width: 124, height: 60)
     var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
+    var maxCellHeight: CGFloat = 0
     
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var buttonMore: UIButton!
+    @IBOutlet weak var titleLabel: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -31,7 +33,6 @@ final class SmallTableCell: UITableViewCell {
         buttonMore.clipsToBounds = true
         buttonMore.layer.cornerRadius = buttonMore.frame.height / 2.0
         
-        // 세로 스크롤 비활성화 (가로 스크롤은 orthogonalScrollingBehavior로 처리)
         collectionView.alwaysBounceVertical = false
         collectionView.showsVerticalScrollIndicator = false
         
@@ -78,6 +79,10 @@ final class SmallTableCell: UITableViewCell {
     }
     
     func configureCollectionView() {
+        // XIB 등록 - 이 코드가 없으면 Storyboard cell을 사용하려고 시도함
+        let nib = UINib(nibName: "BCell", bundle: nil)
+        collectionView.register(nib, forCellWithReuseIdentifier: BCell.identifier)
+        
         let layout = UICollectionViewCompositionalLayout { _, _ in
             let leadingInset: CGFloat = 16
             let spacing: CGFloat = 10
@@ -152,60 +157,35 @@ final class SmallTableCell: UITableViewCell {
             NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
         }
     }
+}
+
+// MARK: - DynamicCollectionViewTableCell Protocol
+extension SmallTableCell: DynamicCollectionViewTableCell {
+    
+    var collectionViewVerticalInsets: CGFloat {
+        return 32.0
+    }
+    
+    var dynamicCollectionView: UICollectionView {
+        return collectionView
+    }
+    
+    func additionalHeight(for targetSize: CGSize) -> CGFloat {
+        return titleLabel.frame.height + buttonMore.frame.height
+    }
+    
+    func calculateCellWidth(targetSize: CGSize) -> CGFloat {
+        // 레이아웃과 동일한 로직: 0.38 fractionalWidth
+        return targetSize.width * 0.38
+    }
+    
+    func measureCellHeight(at index: Int, cellWidth: CGFloat) -> CGFloat? {
+        return measureCellHeightFromNib(nibName: "BCell", cellWidth: cellWidth) { (cell: BCell) in
+            cell.setData(index)
+        }
+    }
     
     override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
-        let yPos = collectionView.frame.origin.y
-        
-        // 레이아웃 계산
-        collectionView.frame = CGRect(x: 0, y: 0, width: targetSize.width, height: CGFloat(MAXFLOAT))
-        collectionView.layoutIfNeeded()
-        
-        // 현재 레이아웃된 높이
-        let currentLayoutHeight = collectionView.collectionViewLayout.collectionViewContentSize.height
-        
-        // 모든 아이템의 최대 높이 계산
-        var maxCalculatedHeight: CGFloat = currentLayoutHeight
-        
-        // contentInsets 반영 (top: 16, bottom: 16)
-        let verticalInsets: CGFloat = 16 + 16
-        
-        // snapshot에서 아이템 개수 확인
-        if let snapshot = dataSource?.snapshot() {
-            let itemCount = snapshot.numberOfItems(inSection: .main)
-            
-            // 첫 번째 셀의 기본 높이 측정 (index=0일 때)
-            if itemCount > 0, let firstCell = collectionView.cellForItem(at: IndexPath(item: 0, section: 0)) {
-                let firstCellHeight = firstCell.frame.height
-                
-                let baseCellHeight = firstCellHeight
-                
-                // 모든 인덱스에 대해 높이 계산
-                var maxCellHeight: CGFloat = 0
-                for index in 0..<itemCount {
-                    let calculatedHeight = baseCellHeight + CGFloat(index) * 30.0
-                    maxCellHeight = max(maxCellHeight, calculatedHeight)
-                }
-                
-                // 최대 셀 높이 + contentInsets
-                maxCalculatedHeight = max(maxCalculatedHeight, maxCellHeight + verticalInsets)
-            } else {
-                // 첫 번째 셀이 없으면 layoutAttributes로 기본 높이 추정
-                if let layoutAttributes = collectionView.layoutAttributesForItem(at: IndexPath(item: 0, section: 0)) {
-                    let baseCellHeight = layoutAttributes.frame.height
-                    
-                    var maxCellHeight: CGFloat = 0
-                    for index in 0..<itemCount {
-                        let calculatedHeight = baseCellHeight + CGFloat(index) * 30.0
-                        maxCellHeight = max(maxCellHeight, calculatedHeight)
-                    }
-                    
-                    // 최대 셀 높이 + contentInsets
-                    maxCalculatedHeight = max(maxCalculatedHeight, maxCellHeight + verticalInsets)
-                }
-            }
-        }
-        
-        let newSize = CGSize(width: targetSize.width, height: yPos + maxCalculatedHeight + buttonMore.frame.height)
-        return newSize
+        return calculateDynamicHeight(targetSize: targetSize)
     }
 }

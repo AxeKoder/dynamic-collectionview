@@ -18,10 +18,15 @@ enum Item: Hashable {
 
 final class SmallTableCell: UITableViewCell {
     static let identifier = "SmallTableCell"
-    var items: [Int] = (0..<5).map { $0 }
+    var items: [Int] = []
     var currentItemSize: CGSize = .init(width: 124, height: 60)
     var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
     var maxCellHeight: CGFloat = 0
+    
+    enum Constant {
+        static let cellWidth: CGFloat = 140
+    }
+    
     
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var buttonMore: UIButton!
@@ -38,7 +43,6 @@ final class SmallTableCell: UITableViewCell {
         
         configureCollectionView()
         configureDataSource()
-        applySnapshot()
         
         // 옵저버 등록
         NotificationCenter.default.addObserver(self, selector: #selector(addItem(_:)), name: NSNotification.Name("AddItem"), object: nil)
@@ -49,7 +53,16 @@ final class SmallTableCell: UITableViewCell {
     }
     
     func setupUI() {
-        collectionView.layoutSubviews()
+        if self.items.isEmpty {
+            fetchItems()
+        }
+    }
+    
+    private func fetchItems() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
+            self.items = (0..<5).map { $0 }
+            self.applySnapshot()
+        }
     }
     
     @objc func resize(_ notification: Notification) {
@@ -71,10 +84,8 @@ final class SmallTableCell: UITableViewCell {
     
     private func fetchAddItems() {
         Task {
-            try await Task.sleep(nanoseconds: 400_000_000)
-            await MainActor.run {
-                addTwoCells()
-            }
+            try await Task.sleep(nanoseconds: 40_000_000)
+            addTwoCells()
         }
     }
     
@@ -84,7 +95,7 @@ final class SmallTableCell: UITableViewCell {
         collectionView.register(nib, forCellWithReuseIdentifier: BCell.identifier)
         
         let layout = UICollectionViewCompositionalLayout { _, _ in
-            let leadingInset: CGFloat = 16
+            let hGap: CGFloat = 10
             let spacing: CGFloat = 10
             
             // 아이템 높이를 estimated로 설정하여 콘텐츠에 맞게 자동 조절
@@ -96,7 +107,7 @@ final class SmallTableCell: UITableViewCell {
             
             // 그룹 너비를 계산된 cellWidth로 설정
             let groupSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(0.38),
+                widthDimension: .absolute(Constant.cellWidth),
                 heightDimension: .estimated(100)
             )
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
@@ -104,7 +115,7 @@ final class SmallTableCell: UITableViewCell {
             let section = NSCollectionLayoutSection(group: group)
             section.orthogonalScrollingBehavior = .continuous
             section.interGroupSpacing = spacing
-            section.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: leadingInset, bottom: 16, trailing: 16)
+            section.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: hGap, bottom: 16, trailing: hGap)
             return section
         }
         collectionView.collectionViewLayout = layout
@@ -129,33 +140,22 @@ final class SmallTableCell: UITableViewCell {
                 Item.a("\($0)")
             }
         )
-        dataSource.apply(snapshot, animatingDifferences: false) {
-            self.collectionView.layoutSubviews()
+        dataSource.apply(snapshot, animatingDifferences: true) {
+            NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
         }
     }
     
     /// 2개의 셀을 동일한 텍스트(사이즈)로 추가하는 메소드
     func addTwoCells(with text: String = "New Item") {
-        var snapshot = dataSource.snapshot()
-        let timestamp = Date().timeIntervalSince1970
-        // 고유한 식별자를 위해 timestamp 활용
-        snapshot.appendItems([
-            .a("\(text) - \(Int(timestamp * 1000) % 10000)"),
-            .a("\(text) - \(Int(timestamp * 1000) % 10000 + 1)")
-        ])
-        dataSource.apply(snapshot, animatingDifferences: true) {
-            self.collectionView.layoutSubviews()
-            NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
-        }
+        items.append(items.count)
+        applySnapshot()
     }
     
     func removeOneCell() {
         var snapshot = dataSource.snapshot()
         guard let lastItem = snapshot.itemIdentifiers.last else { return }
         snapshot.deleteItems([lastItem])
-        dataSource.apply(snapshot, animatingDifferences: true) {
-            NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
-        }
+        dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
 
@@ -175,8 +175,8 @@ extension SmallTableCell: DynamicCollectionViewTableCell {
     }
     
     func calculateCellWidth(targetSize: CGSize) -> CGFloat {
-        // 레이아웃과 동일한 로직: 0.38 fractionalWidth
-        return targetSize.width * 0.38
+        // 레이아웃과 동일한 로직
+        return Constant.cellWidth
     }
     
     func measureCellHeight(at index: Int, cellWidth: CGFloat) -> CGFloat? {

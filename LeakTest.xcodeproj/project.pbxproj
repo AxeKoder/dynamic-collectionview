@@ -18,6 +18,7 @@
 		49E5742B2EDD93BA000774E5 /* BCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E5742A2EDD93BA000774E5 /* BCell.swift */; };
 		49E5742D2EDD951F000774E5 /* LargeTableCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E5742C2EDD951F000774E5 /* LargeTableCell.swift */; };
 		49E5742F2EDD96B9000774E5 /* VerticalCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E5742E2EDD96B9000774E5 /* VerticalCell.swift */; };
+		EC18E89A2EF5442E00298CFB /* VerticalCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC18E8992EF5442E00298CFB /* VerticalCell.xib */; };
 		ECFF91282EF2F6AA006A14B4 /* BCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECFF91272EF2F6AA006A14B4 /* BCell.xib */; };
 		ECFF912E2EF2FAE3006A14B4 /* DynamicCollectionViewTableCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFF912D2EF2FAE3006A14B4 /* DynamicCollectionViewTableCell.swift */; };
 /* End PBXBuildFile section */
@@ -36,6 +37,7 @@
 		49E5742A2EDD93BA000774E5 /* BCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BCell.swift; sourceTree = "<group>"; };
 		49E5742C2EDD951F000774E5 /* LargeTableCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeTableCell.swift; sourceTree = "<group>"; };
 		49E5742E2EDD96B9000774E5 /* VerticalCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticalCell.swift; sourceTree = "<group>"; };
+		EC18E8992EF5442E00298CFB /* VerticalCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = VerticalCell.xib; sourceTree = "<group>"; };
 		ECFF91272EF2F6AA006A14B4 /* BCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = BCell.xib; sourceTree = "<group>"; };
 		ECFF912D2EF2FAE3006A14B4 /* DynamicCollectionViewTableCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicCollectionViewTableCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -100,6 +102,7 @@
 			children = (
 				49E5742C2EDD951F000774E5 /* LargeTableCell.swift */,
 				49E5742E2EDD96B9000774E5 /* VerticalCell.swift */,
+				EC18E8992EF5442E00298CFB /* VerticalCell.xib */,
 			);
 			path = VerticalCell;
 			sourceTree = "<group>";
@@ -164,6 +167,7 @@
 			files = (
 				ECFF91282EF2F6AA006A14B4 /* BCell.xib in Resources */,
 				492807002A55596400EDAEFA /* LaunchScreen.storyboard in Resources */,
+				EC18E89A2EF5442E00298CFB /* VerticalCell.xib in Resources */,
 				492806FD2A55596400EDAEFA /* Assets.xcassets in Resources */,
 				492806FB2A55596200EDAEFA /* Main.storyboard in Resources */,
 			);

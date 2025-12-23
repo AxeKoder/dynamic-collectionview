@@ -32,15 +32,17 @@ final class BCell: UICollectionViewCell {
     }
     
     func setData(_ index: Int) {
+        let titleValue = "Te st Lab"
         self.index = index
-        let title = String(index)
+        let title = String(repeating: titleValue, count: index + 1)
+
         titleLabel.text = title
         blackView.isHidden = true
         yellowView.isHidden = true
         
         stackView.addArrangedSubview(subview)
-        subviewHeightConstraint.constant = CGFloat(index) * 30.0
-        subviewHeightConstraint.isActive = true
+//        subviewHeightConstraint.constant = CGFloat(index) * 30.0
+//        subviewHeightConstraint.isActive = true
     }
     
     

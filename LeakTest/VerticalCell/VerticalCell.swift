@@ -13,7 +13,7 @@ class VerticalCell: UICollectionViewCell {
     @IBOutlet weak var bottomViewHeight: NSLayoutConstraint!
     
     func setupUI(index: Int) {
-        bottomViewHeight.constant = CGFloat(index + 1) * 22.0
+        bottomViewHeight.constant = CGFloat(index + 1) * 14.0
     }
     
     func addCreatedView() -> UIView {

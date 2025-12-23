@@ -95,12 +95,15 @@ extension DynamicCollectionViewTableCell {
         let currentLayoutHeight = dynamicCollectionView.collectionViewLayout.collectionViewContentSize.height
         
         // 모든 아이템의 최대 높이 계산
-        let itemCount = dynamicCollectionView.numberOfItems(inSection: 0)
-        let maxCalculatedHeight = calculateMaxHeight(
-            itemCount: itemCount,
-            currentHeight: currentLayoutHeight,
-            targetSize: targetSize
-        )
+        var maxCalculatedHeight: CGFloat = 0
+        if dynamicCollectionView.numberOfSections > 0 {
+            let itemCount = dynamicCollectionView.numberOfItems(inSection: 0)
+            maxCalculatedHeight = calculateMaxHeight(
+                itemCount: itemCount,
+                currentHeight: currentLayoutHeight,
+                targetSize: targetSize
+            )
+        }
         
         let totalHeight = maxCalculatedHeight + additionalHeight(for: targetSize)
         return CGSize(width: targetSize.width, height: totalHeight)

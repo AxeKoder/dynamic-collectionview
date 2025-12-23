@@ -19,7 +19,7 @@ final class LargeTableCell: UITableViewCell {
     static let identifier = "LargeTableCell"
     
     var cellIndex: Int = 0
-    var items: [Int] = [0]
+    var items: [Int] = (0..<4).map { $0 }
     var dataSource: UICollectionViewDiffableDataSource<VerticalSection, VerticalItem>!
     
     @IBOutlet weak var collectionView: UICollectionView!
@@ -34,7 +34,7 @@ final class LargeTableCell: UITableViewCell {
         
         configureCollectionView()
         configureDataSource()
-        applySnapshot()
+        
         
         // 옵저버 등록
         NotificationCenter.default.addObserver(self, selector: #selector(addItem(_:)), name: NSNotification.Name("AddItem"), object: nil)
@@ -57,6 +57,7 @@ final class LargeTableCell: UITableViewCell {
     
     func setData(_ index: Int) {
         self.cellIndex = index
+        applySnapshot()
     }
     
     @objc func reloadData(_ notificaiton: Notification) {
@@ -64,19 +65,19 @@ final class LargeTableCell: UITableViewCell {
     }
     
     func configureCollectionView() {
+        let nib = UINib(nibName: "VerticalCell", bundle: nil)
+        collectionView.register(nib, forCellWithReuseIdentifier: VerticalCell.identifier)
+        
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
             let containerWidth = environment.container.contentSize.width
             let leadingInset: CGFloat = 16
-            let spacing: CGFloat = 0
+            let spacing: CGFloat = 10
             
-            // 2.5개 셀 + 2개 간격이 보이도록 계산
-            // 보이는 영역 = containerWidth - leadingInset
-            // 2.5 * cellWidth + 2 * spacing = containerWidth - leadingInset
-            let cellWidth = (containerWidth - leadingInset - (2 * spacing)) / 2.5
+            let cellWidth = (containerWidth - leadingInset - (2 * spacing)) / 2.0
             
             // 아이템 높이를 estimated로 설정하여 콘텐츠에 맞게 자동 조절
             let itemSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1.0),
+                widthDimension: .absolute(cellWidth),
                 heightDimension: .estimated(100)
             )
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
@@ -86,11 +87,11 @@ final class LargeTableCell: UITableViewCell {
                 widthDimension: .fractionalWidth(1.0),
                 heightDimension: .estimated(100)
             )
-            let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+            group.interItemSpacing = .fixed(spacing)
             
             let section = NSCollectionLayoutSection(group: group)
-            section.interGroupSpacing = spacing
-            section.contentInsets = NSDirectionalEdgeInsets.zero
+            section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
             return section
         }
         collectionView.collectionViewLayout = layout
@@ -110,16 +111,15 @@ final class LargeTableCell: UITableViewCell {
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<VerticalSection, VerticalItem>()
         snapshot.appendSections([.main])
-        snapshot.appendItems([
-            .a("Short text")
-        ])
-        dataSource.apply(snapshot, animatingDifferences: true) {
-            NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
-        }
+        snapshot.appendItems(
+            items.map { .a("\($0)") }
+        )
+        dataSource.apply(snapshot, animatingDifferences: true)
         
     }
     
     func addTwoCells(with text: String = "New Item") {
+        items.append(items.count)
         var snapshot = dataSource.snapshot()
         let timestamp = Date().timeIntervalSince1970
         // 고유한 식별자를 위해 timestamp 활용
@@ -127,20 +127,40 @@ final class LargeTableCell: UITableViewCell {
             .a("\(text) - \(Int(timestamp * 1000) % 10000)")
         ])
         dataSource.apply(snapshot, animatingDifferences: true) {
-            print("applyCompletion: layoutContentSize: \(self.collectionView.collectionViewLayout.collectionViewContentSize)")
-            print("applyCompletion: contentViewSize: \(self.contentView.frame.size)")
             NotificationCenter.default.post(name: NSNotification.Name("PerformBatchUpdate"), object: nil, userInfo: nil)
+
         }
-    }
-    
-    override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
-        collectionView.frame = CGRect(x: 0, y: 0, width: targetSize.width, height: CGFloat(MAXFLOAT))
-        collectionView.layoutIfNeeded()
-        let size = collectionView.collectionViewLayout.collectionViewContentSize
-        let newSize = CGSize(width: size.width, height: size.height + buttonMore.frame.height)
-        return newSize
     }
     
 }
 
-
+// MARK: - DynamicCollectionViewTableCell Protocol
+extension LargeTableCell: DynamicCollectionViewTableCell {
+    
+    var collectionViewVerticalInsets: CGFloat {
+        return 0
+    }
+    
+    var dynamicCollectionView: UICollectionView {
+        return collectionView
+    }
+    
+    func additionalHeight(for targetSize: CGSize) -> CGFloat {
+        return buttonMore.frame.height
+    }
+    
+    func calculateCellWidth(targetSize: CGSize) -> CGFloat {
+        // 레이아웃과 동일한 로직
+        return UIScreen.main.bounds.width
+    }
+    
+    func measureCellHeight(at index: Int, cellWidth: CGFloat) -> CGFloat? {
+        return measureCellHeightFromNib(nibName: "VerticalCell", cellWidth: cellWidth) { (cell: BCell) in
+            cell.setData(index)
+        }
+    }
+    
+    override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
+        return calculateDynamicHeight(targetSize: targetSize)
+    }
+}

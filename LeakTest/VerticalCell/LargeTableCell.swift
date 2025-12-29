@@ -19,7 +19,7 @@ final class LargeTableCell: UITableViewCell {
     static let identifier = "LargeTableCell"
     
     var cellIndex: Int = 0
-    var items: [Int] = (0..<4).map { $0 }
+    var items: [Int] = (0..<24).map { $0 }
     var dataSource: UICollectionViewDiffableDataSource<VerticalSection, VerticalItem>!
     
     @IBOutlet weak var collectionView: UICollectionView!
@@ -137,27 +137,12 @@ final class LargeTableCell: UITableViewCell {
 // MARK: - DynamicCollectionViewTableCell Protocol
 extension LargeTableCell: DynamicCollectionViewTableCell {
     
-    var collectionViewVerticalInsets: CGFloat {
-        return 0
-    }
-    
     var dynamicCollectionView: UICollectionView {
         return collectionView
     }
     
     func additionalHeight(for targetSize: CGSize) -> CGFloat {
         return buttonMore.frame.height
-    }
-    
-    func calculateCellWidth(targetSize: CGSize) -> CGFloat {
-        // 레이아웃과 동일한 로직
-        return UIScreen.main.bounds.width
-    }
-    
-    func measureCellHeight(at index: Int, cellWidth: CGFloat) -> CGFloat? {
-        return measureCellHeightFromNib(nibName: "VerticalCell", cellWidth: cellWidth) { (cell: BCell) in
-            cell.setData(index)
-        }
     }
     
     override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {

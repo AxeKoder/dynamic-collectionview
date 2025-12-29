@@ -24,7 +24,7 @@ final class SmallTableCell: UITableViewCell {
     var maxCellHeight: CGFloat = 0
     
     enum Constant {
-        static let cellWidth: CGFloat = 140
+        static let cellWidth: CGFloat = 224
     }
     
     
@@ -60,7 +60,7 @@ final class SmallTableCell: UITableViewCell {
     
     private func fetchItems() {
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
-            self.items = (0..<5).map { $0 }
+            self.items = (0..<100).map { $0 }
             self.applySnapshot()
         }
     }
@@ -113,7 +113,7 @@ final class SmallTableCell: UITableViewCell {
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
             
             let section = NSCollectionLayoutSection(group: group)
-            section.orthogonalScrollingBehavior = .continuous
+            section.orthogonalScrollingBehavior = .groupPaging
             section.interGroupSpacing = spacing
             section.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: hGap, bottom: 16, trailing: hGap)
             return section
@@ -162,27 +162,12 @@ final class SmallTableCell: UITableViewCell {
 // MARK: - DynamicCollectionViewTableCell Protocol
 extension SmallTableCell: DynamicCollectionViewTableCell {
     
-    var collectionViewVerticalInsets: CGFloat {
-        return 32.0
-    }
-    
     var dynamicCollectionView: UICollectionView {
         return collectionView
     }
     
     func additionalHeight(for targetSize: CGSize) -> CGFloat {
         return titleLabel.frame.height + buttonMore.frame.height
-    }
-    
-    func calculateCellWidth(targetSize: CGSize) -> CGFloat {
-        // 레이아웃과 동일한 로직
-        return Constant.cellWidth
-    }
-    
-    func measureCellHeight(at index: Int, cellWidth: CGFloat) -> CGFloat? {
-        return measureCellHeightFromNib(nibName: "BCell", cellWidth: cellWidth) { (cell: BCell) in
-            cell.setData(index)
-        }
     }
     
     override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {

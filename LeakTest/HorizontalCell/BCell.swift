@@ -32,7 +32,7 @@ final class BCell: UICollectionViewCell {
     }
     
     func setData(_ index: Int) {
-        let titleValue = "Te st Lab"
+        let titleValue = "Te st Lab elDa"
         self.index = index
         let title = String(repeating: titleValue, count: index + 1)
 
